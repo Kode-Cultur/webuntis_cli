@@ -3,12 +3,13 @@ import logging
 import webuntis
 # Doc: https://python-webuntis.readthedocs.io/en/latest/objects.html
 import webuntis.objects
-import webuntis_cli
+# import webuntis_cli
 import configparser
 import datetime
 import locale
 import os
 import stat
+from colorama import Fore, Back, Style
 import getpass
 
 
@@ -31,7 +32,7 @@ class WebuntisCli:
     def _create_parser(self):
         logging.debug("parsing arguments")
         parser = argparse.ArgumentParser()
-        parser.epilog = "version " + webuntis_cli.VERSION
+        parser.epilog = "version " + "" # webuntis_cli.VERSION
         parser.description = "Kommandozeilen-Client für WebUntis"
         parser.add_argument("--lehrer", "-l", nargs='*',
                             help="Ein oder mehrere Nachnamen von Lehrern")
@@ -140,16 +141,16 @@ class WebuntisCli:
         logging.debug("printing timetable")
         time_format_end = "%H:%M"
         time_format_start = "%Y-%m-%d %a " + time_format_end
-
+        now = datetime.datetime.now()
         for po in tt:
             s = po.start.strftime(time_format_start)
             e = po.end.strftime(time_format_end)
             k = " ".join([k.name for k in po.klassen])
-            t = " ".join([t.name for t in po.teachers])
+            t = po._data["te"][0]["id"] #.join([t.name for t in po.teachers])
             r = " ".join([r.name for r in po.rooms])
             sub = " ".join([r.name for r in po.subjects])
             c = "(" + po.code + ")" if po.code is not None else ""
-            print(s + "-" + e, k, sub, t, r, c)
+            print(("|>" if (po.start <= now and now < po.end) else "  ")+s + "-" + e, k, Fore.GREEN,sub,Fore.RESET, t, r, c)
 
     def _adjust_date_to_schoolyearend(self, date: datetime.datetime):
         current_year = self.session.schoolyears().current
@@ -212,5 +213,5 @@ def main():
     wcli.run()
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    # logging.basicConfig(level=logging.DEBUG)
     main()
